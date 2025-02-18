@@ -1,3 +1,4 @@
+
 export interface DropletData {
   diameter: number;
   area: number;
@@ -38,14 +39,17 @@ export const analyzeImage = async (imageFile: File): Promise<{
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
       
+      // Calculate pixel to mm conversion (assuming standard WSP card size)
+      const cardWidth = 76; // mm
+      const cardHeight = 26; // mm
+      const pixelsPerMM = Math.min(canvas.width / cardWidth, canvas.height / cardHeight);
+      
       // Convert to grayscale and detect droplets
       const droplets: DropletData[] = [];
       const visited = new Set<number>();
-      const threshold = 100; // Adjust based on WSP paper characteristics
+      const threshold = 128; // Adjusted threshold for better droplet detection
       
-      // Calculate real area (assuming standard WSP card size)
-      const cardWidth = 76; // mm
-      const cardHeight = 26; // mm
+      // Calculate real area
       const analysedArea = (cardWidth * cardHeight) / 100; // convert to cm²
       
       for (let y = 0; y < canvas.height; y++) {
@@ -57,38 +61,49 @@ export const analyzeImage = async (imageFile: File): Promise<{
             const g = data[idx + 1];
             const b = data[idx + 2];
             
-            // Convert to grayscale
-            const gray = (r + g + b) / 3;
+            // Enhanced grayscale conversion using luminance weights
+            const gray = 0.299 * r + 0.587 * g + 0.114 * b;
             
             if (gray < threshold) {
               // Flood fill to find droplet
-              const dropletPixels = floodFill(data, canvas.width, canvas.height, x, y, visited);
+              const dropletPixels = floodFill(data, canvas.width, canvas.height, x, y, visited, threshold);
               
-              // Calculate droplet properties
-              const diameter = Math.sqrt(dropletPixels.size * 4 / Math.PI);
-              const area = dropletPixels.size;
-              const volume = (4/3) * Math.PI * Math.pow(diameter/2, 3);
-              
-              droplets.push({ diameter, area, volume });
+              if (dropletPixels.size > 4) { // Filter out noise
+                // Convert pixel measurements to real-world units
+                const areaMM2 = dropletPixels.size / (pixelsPerMM * pixelsPerMM);
+                const diameterMM = Math.sqrt(areaMM2 * 4 / Math.PI);
+                const diameterMicrons = diameterMM * 1000; // Convert to microns
+                
+                // Calculate spread factor correction
+                const spreadFactor = 1.7; // Typical value for water on WSP
+                const actualDiameter = diameterMicrons / spreadFactor;
+                
+                // Calculate volume in nL (assuming spherical droplets)
+                const volume = (4/3) * Math.PI * Math.pow(actualDiameter/2000, 3) * 1e6;
+                
+                droplets.push({
+                  diameter: actualDiameter,
+                  area: areaMM2,
+                  volume: volume
+                });
+              }
             }
           }
         }
       }
       
-      // Calculate analysis results
+      // Calculate analysis results with improved accuracy
       const totalPixels = canvas.width * canvas.height;
-      const coverage = (droplets.reduce((sum, d) => sum + d.area, 0) / totalPixels) * 100;
+      const coverage = (droplets.reduce((sum, d) => sum + d.area, 0) * 100) / analysedArea;
       
       const diameters = droplets.map(d => d.diameter).sort((a, b) => a - b);
       const volumes = droplets.map(d => d.volume).sort((a, b) => a - b);
       
       const totalVolume = volumes.reduce((sum, v) => sum + v, 0);
-      const driftVolume = volumes.filter(v => {
-        const diameter = Math.pow((v * 3)/(4 * Math.PI), 1/3) * 2;
-        return diameter < 150;
-      }).reduce((sum, v) => sum + v, 0);
+      const driftVolume = volumes.filter((v, i) => diameters[i] < 150)
+                                .reduce((sum, v) => sum + v, 0);
       
-      // Calculate VMD (DV0.5) - diameter where 50% of volume is in smaller droplets
+      // Calculate VMD (DV0.5) and other volume-based parameters
       let volumeSum = 0;
       let vmd = 0;
       let vmd01 = 0;
@@ -107,11 +122,13 @@ export const analyzeImage = async (imageFile: File): Promise<{
       // Calculate relative span
       const relativeSpan = (vmd09 - vmd01) / vmd;
       
-      // Calculate drift potential
+      // Calculate drift potential with improved accuracy
       const driftPotential = (driftVolume / totalVolume) * 100;
       
-      // Droplets per square centimeter
-      const dropletsPerCm2 = droplets.length / analysedArea;
+      // Calculate flow rate based on coverage and typical application parameters
+      const applicationSpeed = 8; // km/h (typical ground speed)
+      const swathWidth = 0.5; // meters (typical nozzle spacing)
+      const flowRate = (coverage * applicationSpeed * swathWidth * 600) / 100; // L/ha
       
       resolve({
         coverage: Number(coverage.toFixed(2)),
@@ -125,7 +142,7 @@ export const analyzeImage = async (imageFile: File): Promise<{
         vmdNmdRatio: Number((vmd / nmd).toFixed(2)),
         biggestDroplet: Number(Math.max(...diameters).toFixed(2)),
         smallestDroplet: Number(Math.min(...diameters).toFixed(2)),
-        flowRate: Number((coverage * 0.5).toFixed(2)),
+        flowRate: Number(flowRate.toFixed(2)),
         analysedArea: Number(analysedArea.toFixed(2)),
         driftPotential: Number(driftPotential.toFixed(2)),
         dropletsPerCm2: Number((droplets.length / analysedArea).toFixed(2))
@@ -136,18 +153,21 @@ export const analyzeImage = async (imageFile: File): Promise<{
   });
 };
 
-// Helper function for flood fill algorithm
+// Enhanced flood fill algorithm with better threshold handling
 function floodFill(
   data: Uint8ClampedArray,
   width: number,
   height: number,
   startX: number,
   startY: number,
-  visited: Set<number>
+  visited: Set<number>,
+  threshold: number
 ): Set<number> {
   const pixels = new Set<number>();
-  const threshold = 100;
   const stack: [number, number][] = [[startX, startY]];
+  const startIdx = (startY * width + startX) * 4;
+  const startGray = (data[startIdx] + data[startIdx + 1] + data[startIdx + 2]) / 3;
+  const tolerance = 20; // Threshold tolerance for color variation
   
   while (stack.length > 0) {
     const [x, y] = stack.pop()!;
@@ -161,7 +181,7 @@ function floodFill(
     }
     
     const gray = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
-    if (gray >= threshold) {
+    if (Math.abs(gray - startGray) > tolerance || gray >= threshold) {
       continue;
     }
     
