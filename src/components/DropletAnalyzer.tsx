@@ -11,6 +11,18 @@ export const DropletAnalyzer = () => {
     coverage: number;
     dropletCount: number;
     averageSize: number;
+    nmd: number;
+    vmd01: number;
+    vmd: number;
+    vmd09: number;
+    relativeSpan: number;
+    vmdNmdRatio: number;
+    biggestDroplet: number;
+    smallestDroplet: number;
+    flowRate: number;
+    analysedArea: number;
+    driftPotential: number;
+    dropletsPerCm2: number;
   } | null>(null);
 
   const handleImageUpload = async (file: File) => {
@@ -24,6 +36,18 @@ export const DropletAnalyzer = () => {
         coverage: 85,
         dropletCount: 250,
         averageSize: 120,
+        nmd: 180,
+        vmd01: 150,
+        vmd: 200,
+        vmd09: 250,
+        relativeSpan: 0.5,
+        vmdNmdRatio: 1.11,
+        biggestDroplet: 300,
+        smallestDroplet: 50,
+        flowRate: 200,
+        analysedArea: 100,
+        driftPotential: 15,
+        dropletsPerCm2: 25,
       });
       setAnalyzing(false);
     }, 2000);
@@ -37,11 +61,14 @@ export const DropletAnalyzer = () => {
         transition={{ duration: 0.5 }}
         className="text-center mb-12"
       >
-        <div className="text-sm font-medium text-primary mb-2">Analysis Tool</div>
-        <h1 className="text-4xl font-bold mb-4">Droplet Vision Analyzer</h1>
-        <p className="text-gray-600 max-w-xl mx-auto">
+        <h1 className="text-4xl font-bold mb-4 text-[#568eff]">DROPCHECK BY AGRITRONIIX INDIA</h1>
+        <p className="text-gray-600 max-w-xl mx-auto mb-4">
           Upload your water-sensitive paper image to analyze droplet distribution and coverage patterns.
         </p>
+        <div className="text-sm text-gray-500">
+          Contact: <a href="tel:+918383075398" className="text-[#568eff]">+91 8383075398</a> | 
+          <a href="mailto:spray@agritroniix.in" className="text-[#568eff] ml-1">spray@agritroniix.in</a>
+        </div>
       </motion.div>
 
       <ImageDropzone onImageUpload={handleImageUpload} />
