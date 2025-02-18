@@ -3,6 +3,8 @@ import { useState } from "react";
 import { ImageDropzone } from "./ImageDropzone";
 import { AnalysisResults } from "./AnalysisResults";
 import { motion } from "framer-motion";
+import { analyzeImage } from "@/utils/imageAnalysis";
+import { toast } from "sonner";
 
 export const DropletAnalyzer = () => {
   const [image, setImage] = useState<string | null>(null);
@@ -30,27 +32,16 @@ export const DropletAnalyzer = () => {
     setImage(imageUrl);
     setAnalyzing(true);
 
-    // Simulate analysis (replace with actual analysis logic)
-    setTimeout(() => {
-      setResults({
-        coverage: 85,
-        dropletCount: 250,
-        averageSize: 120,
-        nmd: 180,
-        vmd01: 150,
-        vmd: 200,
-        vmd09: 250,
-        relativeSpan: 0.5,
-        vmdNmdRatio: 1.11,
-        biggestDroplet: 300,
-        smallestDroplet: 50,
-        flowRate: 200,
-        analysedArea: 100,
-        driftPotential: 15,
-        dropletsPerCm2: 25,
-      });
+    try {
+      const analysisResults = await analyzeImage(file);
+      setResults(analysisResults);
+      toast.success("Analysis completed successfully");
+    } catch (error) {
+      toast.error("Error analyzing image");
+      console.error("Analysis error:", error);
+    } finally {
       setAnalyzing(false);
-    }, 2000);
+    }
   };
 
   return (
