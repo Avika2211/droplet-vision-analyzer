@@ -23,6 +23,9 @@ interface AnalysisResultsProps {
 }
 
 export const AnalysisResults = (results: AnalysisResultsProps) => {
+  // Helper function to format numbers to 2 decimal places
+  const formatNumber = (num: number) => Number(num.toFixed(2));
+
   const generatePDF = () => {
     const doc = new jsPDF();
     const timestamp = new Date().toLocaleString();
@@ -36,19 +39,19 @@ export const AnalysisResults = (results: AnalysisResultsProps) => {
     
     const tableData = [
       ["Parameter", "Value"],
-      ["Droplets/cm²", `${results.dropletsPerCm2}`],
-      ["Coverage (%)", `${results.coverage}%`],
-      ["NMD (µm)", `${results.nmd}`],
-      ["VMD01 (µm)", `${results.vmd01}`],
-      ["VMD (µm)", `${results.vmd}`],
-      ["VMD09 (µm)", `${results.vmd09}`],
-      ["Relative Span", `${results.relativeSpan}`],
-      ["VMD/NMD Ratio", `${results.vmdNmdRatio}`],
-      ["Biggest Droplet (µm)", `${results.biggestDroplet}`],
-      ["Smallest Droplet (µm)", `${results.smallestDroplet}`],
-      ["Flow Rate (L/ha)", `${results.flowRate}`],
-      ["Analysed Area (cm²)", `${results.analysedArea}`],
-      ["Drift Potential (%)", `${results.driftPotential}`],
+      ["Droplets/cm²", `${formatNumber(results.dropletsPerCm2)}`],
+      ["Coverage (%)", `${formatNumber(results.coverage)}%`],
+      ["NMD (µm)", `${formatNumber(results.nmd)}`],
+      ["VMD01 (µm)", `${formatNumber(results.vmd01)}`],
+      ["VMD (µm)", `${formatNumber(results.vmd)}`],
+      ["VMD09 (µm)", `${formatNumber(results.vmd09)}`],
+      ["Relative Span", `${formatNumber(results.relativeSpan)}`],
+      ["VMD/NMD Ratio", `${formatNumber(results.vmdNmdRatio)}`],
+      ["Biggest Droplet (µm)", `${formatNumber(results.biggestDroplet)}`],
+      ["Smallest Droplet (µm)", `${formatNumber(results.smallestDroplet)}`],
+      ["Flow Rate (L/ha)", `${formatNumber(results.flowRate)}`],
+      ["Analysed Area (cm²)", `${formatNumber(results.analysedArea)}`],
+      ["Drift Potential (%)", `${formatNumber(results.driftPotential)}`],
     ];
 
     autoTable(doc, {
@@ -76,15 +79,15 @@ export const AnalysisResults = (results: AnalysisResultsProps) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="bg-[#568eff] text-white rounded-lg p-6 shadow-sm">
           <div className="text-sm font-medium mb-2">Coverage</div>
-          <div className="text-3xl font-semibold">{results.coverage}%</div>
+          <div className="text-3xl font-semibold">{formatNumber(results.coverage)}%</div>
         </div>
         <div className="bg-[#cef00f] text-gray-800 rounded-lg p-6 shadow-sm">
           <div className="text-sm font-medium mb-2">Droplets/cm²</div>
-          <div className="text-3xl font-semibold">{results.dropletsPerCm2}</div>
+          <div className="text-3xl font-semibold">{formatNumber(results.dropletsPerCm2)}</div>
         </div>
         <div className="bg-[#568eff] text-white rounded-lg p-6 shadow-sm">
           <div className="text-sm font-medium mb-2">Drift Potential</div>
-          <div className="text-3xl font-semibold">{results.driftPotential}%</div>
+          <div className="text-3xl font-semibold">{formatNumber(results.driftPotential)}%</div>
         </div>
       </div>
 
@@ -103,27 +106,27 @@ export const AnalysisResults = (results: AnalysisResultsProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="p-4 bg-gray-50 rounded-lg">
             <div className="text-sm font-medium text-gray-500">NMD</div>
-            <div className="text-lg font-semibold">{results.nmd} µm</div>
+            <div className="text-lg font-semibold">{formatNumber(results.nmd)} µm</div>
           </div>
           <div className="p-4 bg-gray-50 rounded-lg">
             <div className="text-sm font-medium text-gray-500">VMD</div>
-            <div className="text-lg font-semibold">{results.vmd} µm</div>
+            <div className="text-lg font-semibold">{formatNumber(results.vmd)} µm</div>
           </div>
           <div className="p-4 bg-gray-50 rounded-lg">
             <div className="text-sm font-medium text-gray-500">VMD/NMD Ratio</div>
-            <div className="text-lg font-semibold">{results.vmdNmdRatio}</div>
+            <div className="text-lg font-semibold">{formatNumber(results.vmdNmdRatio)}</div>
           </div>
           <div className="p-4 bg-gray-50 rounded-lg">
             <div className="text-sm font-medium text-gray-500">Relative Span</div>
-            <div className="text-lg font-semibold">{results.relativeSpan}</div>
+            <div className="text-lg font-semibold">{formatNumber(results.relativeSpan)}</div>
           </div>
           <div className="p-4 bg-gray-50 rounded-lg">
             <div className="text-sm font-medium text-gray-500">Flow Rate</div>
-            <div className="text-lg font-semibold">{results.flowRate} L/ha</div>
+            <div className="text-lg font-semibold">{formatNumber(results.flowRate)} L/ha</div>
           </div>
           <div className="p-4 bg-gray-50 rounded-lg">
             <div className="text-sm font-medium text-gray-500">Analysed Area</div>
-            <div className="text-lg font-semibold">{results.analysedArea} cm²</div>
+            <div className="text-lg font-semibold">{formatNumber(results.analysedArea)} cm²</div>
           </div>
         </div>
       </div>

@@ -1,4 +1,3 @@
-
 export interface DropletData {
   diameter: number;
   area: number;
@@ -115,21 +114,21 @@ export const analyzeImage = async (imageFile: File): Promise<{
       const dropletsPerCm2 = droplets.length / analysedArea;
       
       resolve({
-        coverage,
+        coverage: Number(coverage.toFixed(2)),
         dropletCount: droplets.length,
-        averageSize: diameters.reduce((sum, d) => sum + d, 0) / diameters.length,
-        nmd,
-        vmd01,
-        vmd,
-        vmd09,
-        relativeSpan,
-        vmdNmdRatio: vmd / nmd,
-        biggestDroplet: Math.max(...diameters),
-        smallestDroplet: Math.min(...diameters),
-        flowRate: coverage * 0.5, // This is an approximation, should be calibrated
-        analysedArea,
-        driftPotential,
-        dropletsPerCm2
+        averageSize: Number((diameters.reduce((sum, d) => sum + d, 0) / diameters.length).toFixed(2)),
+        nmd: Number(nmd.toFixed(2)),
+        vmd01: Number(vmd01.toFixed(2)),
+        vmd: Number(vmd.toFixed(2)),
+        vmd09: Number(vmd09.toFixed(2)),
+        relativeSpan: Number(relativeSpan.toFixed(2)),
+        vmdNmdRatio: Number((vmd / nmd).toFixed(2)),
+        biggestDroplet: Number(Math.max(...diameters).toFixed(2)),
+        smallestDroplet: Number(Math.min(...diameters).toFixed(2)),
+        flowRate: Number((coverage * 0.5).toFixed(2)),
+        analysedArea: Number(analysedArea.toFixed(2)),
+        driftPotential: Number(driftPotential.toFixed(2)),
+        dropletsPerCm2: Number((droplets.length / analysedArea).toFixed(2))
       });
     };
     
